@@ -1,0 +1,1 @@
+sudo ./go-ethereum/build/bin/geth attach /tmp/geth.ipc 
