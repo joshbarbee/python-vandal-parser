@@ -35,13 +35,13 @@ import copy
 import logging
 import typing as t
 
-import analyzer.vandal.cfg as cfg
-import analyzer.vandal.evm_cfg as evm_cfg
-import analyzer.vandal.memtypes as mem
-import analyzer.vandal.opcodes as opcodes
-import analyzer.vandal.patterns as patterns
-import analyzer.vandal.settings as settings
-from analyzer.vandal.lattice import SubsetLatticeElement as ssle
+import pyanalyze.vandal.cfg as cfg
+import pyanalyze.vandal.evm_cfg as evm_cfg
+import pyanalyze.vandal.memtypes as mem
+import pyanalyze.vandal.opcodes as opcodes
+import pyanalyze.vandal.patterns as patterns
+import pyanalyze.vandal.settings as settings
+from pyanalyze.vandal.lattice import SubsetLatticeElement as ssle
 
 import sys
 
@@ -50,8 +50,8 @@ POSTDOM_END_NODE = "END"
 UNRES_DEST = "?"
 """The name of the unresolved jump destination auxiliary node."""
 
-trim_0x_to_int = (
-    lambda x: int(str(x)[2:], 16) if str(x)[0:2] == "0x" else int(str(x), 16)
+trim_0x_to_int = lambda x: (
+    int(str(x)[2:], 16) if str(x)[0:2] == "0x" else int(str(x), 16)
 )
 
 
@@ -112,49 +112,35 @@ class TACGraph(cfg.ControlFlowGraph):
         self.connect_blocks()
 
     @classmethod
-    def from_trace(cls, trace: t.Iterable) -> "TACGraph":
+    def from_geth(cls, trace: dict) -> "TACGraph":
         """
         Construct and return a TACGraph from the given Geth optrace.
 
         Args:
-          trace: a sequence of geth optraces that are newline-separated
+          trace: result from debug_traceVandalTransaction. JSON formatted
         """
 
         ops = []
 
-        if trace["optrace"] is None:
-            logging.error("No logs contained within the current trace")
-            sys.exit(1)
+        to = trace["To"]
 
-        optrace = trace["optrace"].split("\n")
+        for op in trace["Ops"]:
+            pc = op["pc"]
+            op_index = op["opIndex"]
+            opcode = opcodes.opcode_by_value(op["op"])
 
-        to = trace["to"]
-
-        for index, l in enumerate(optrace):
-            if len(l.strip()) > 0:
-                args = l.strip().split(",")
-                pc = int(args[0])
-                call_index = int(args[1])
-                opcode = opcodes.opcode_by_name(args[3])
-                depth = int(args[2])
-
-                val_str = args[6]
-
-                value = None  # parsing as hex string
+            if "ret" in op and len(op["ret"]) > 0:
+                value = int(op["ret"], 16)
+            else:
+                value = 0
+            if "extra" in op and len(op["extra"]) > 0:
+                extra = int(op["extra"], 16)
+            else:
                 extra = None
 
-                if ":" in val_str:
-                    if val_str.split(":")[1] != "0x":
-                        extra = int(val_str.split(":")[1], 16)
-                    value = int(val_str.split(":")[0], 16)
-                elif val_str != "0x":
-                    value = int(val_str, 16)
-                elif val_str == "0x":
-                    value = 0
-
-                ops.append(
-                    evm_cfg.EVMOp(pc, opcode, value, depth, call_index, index, extra)
-                )
+            ops.append(
+                evm_cfg.EVMOp(pc, opcode, value=value, op_index=op_index, extra=extra)
+            )
 
         return cls(evm_cfg.blocks_from_ops(ops), to)
 

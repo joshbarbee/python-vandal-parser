@@ -4,10 +4,10 @@ import abc
 import csv
 import os
 
-import analyzer.vandal.cfg as cfg
-import analyzer.vandal.opcodes as opcodes
-import analyzer.vandal.patterns as patterns
-import analyzer.vandal.tac_cfg as tac_cfg
+import pyanalyze.vandal.cfg as cfg
+import pyanalyze.vandal.opcodes as opcodes
+import pyanalyze.vandal.patterns as patterns
+import pyanalyze.vandal.tac_cfg as tac_cfg
 
 
 class Exporter(abc.ABC):

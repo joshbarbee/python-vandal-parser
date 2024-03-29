@@ -1,0 +1,1 @@
+(cd rust_analyze && python -m maturin develop --release)

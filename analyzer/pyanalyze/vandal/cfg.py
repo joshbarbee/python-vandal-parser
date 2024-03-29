@@ -3,7 +3,7 @@
 import abc
 import typing as t
 
-import analyzer.vandal.patterns as patterns
+import pyanalyze.vandal.patterns as patterns
 
 
 class ControlFlowGraph(patterns.Visitable):

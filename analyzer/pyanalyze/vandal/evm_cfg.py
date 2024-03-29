@@ -2,8 +2,8 @@
 
 import typing as t
 
-import analyzer.vandal.cfg as cfg
-import analyzer.vandal.opcodes as opcodes
+import pyanalyze.vandal.cfg as cfg
+import pyanalyze.vandal.opcodes as opcodes
 
 
 class EVMBasicBlock(cfg.BasicBlock):
@@ -89,8 +89,8 @@ class EVMOp:
         opcode: opcodes.OpCode,
         value: int = None,
         depth: int = None,
-        callindex: int = None,
-        opindex: int = None,
+        call_index: int = None,
+        op_index: int = None,
         extra: int = None,
     ):
         """
@@ -139,10 +139,10 @@ class EVMOp:
         self.extra = extra
         """Any extra value for calls in case of Call/CallCode/DelegateCall/StaticCall"""
 
-        self.call_index = callindex
+        self.call_index = call_index
         """The n-th index of the call, calculated by geth"""
 
-        self.op_index = opindex
+        self.op_index = op_index
         """The n-th opcode executed in that transaction"""
 
     def __str__(self):
@@ -217,7 +217,6 @@ def blocks_from_ops(ops: t.Iterable[EVMOp]) -> t.Iterable[EVMBasicBlock]:
         elif i == len(ops) - 1:
             blocks.append(current)
 
-        op.op_index = i
         op.depth = depth
 
     return blocks
